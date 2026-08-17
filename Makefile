@@ -2,6 +2,9 @@ SOURCES=$(shell python3 scripts/read-config.py --sources )
 FAMILY=$(shell python3 scripts/read-config.py --family )
 DRAWBOT_SCRIPTS=$(shell ls documentation/*.py)
 DRAWBOT_OUTPUT=$(shell ls documentation/*.py | sed 's/\.py/.png/g')
+RASKOVNIK_FRONTEND_DIR?=
+
+.PHONY: help build test proof images clean customize update update-project-template webfont-subset install-webfont-subset
 
 help:
 	@echo "###"
@@ -12,6 +15,8 @@ help:
 	@echo "  make test:   Tests the fonts with fontbakery"
 	@echo "  make proof:  Creates HTML proof documents in the proof/ directory"
 	@echo "  make images: Creates PNG specimen images in the documentation/ directory"
+	@echo "  make webfont-subset: Builds the Platforma Slavonic Regular WOFF2 subset"
+	@echo "  make install-webfont-subset: Builds and installs the subset in Raskovnik"
 	@echo
 
 build: build.stamp
@@ -19,6 +24,8 @@ build: build.stamp
 venv: venv/touchfile
 
 venv-test: venv-test/touchfile
+
+venv-webfont: venv-webfont/touchfile
 
 customize: venv
 	. venv/bin/activate; python3 scripts/customize.py
@@ -37,6 +44,11 @@ venv-test/touchfile: requirements-test.txt
 	. venv-test/bin/activate; pip install -Ur requirements-test.txt
 	touch venv-test/touchfile
 
+venv-webfont/touchfile: requirements-webfont.txt
+	test -d venv-webfont || python3 -m venv venv-webfont
+	. venv-webfont/bin/activate; pip install -Ur requirements-webfont.txt
+	touch venv-webfont/touchfile
+
 test: venv-test build.stamp
 	TOCHECK=$$(find fonts/variable -type f 2>/dev/null); if [ -z "$$TOCHECK" ]; then TOCHECK=$$(find fonts/ttf -type f 2>/dev/null); fi ; . venv-test/bin/activate; mkdir -p out/ out/fontbakery; fontbakery check-googlefonts -l WARN --full-lists --succinct --badges out/badges --html out/fontbakery/fontbakery-report.html --ghmarkdown out/fontbakery/fontbakery-report.md $$TOCHECK  || echo '::warning file=sources/config.yaml,title=Fontbakery failures::The fontbakery QA check reported errors in your font. Please check the generated report.'
 
@@ -45,11 +57,18 @@ proof: venv build.stamp
 
 images: venv $(DRAWBOT_OUTPUT)
 
+webfont-subset: venv-webfont fonts/ttf/Monomakh-Regular.ttf scripts/build-webfont-subset.py
+	venv-webfont/bin/python scripts/build-webfont-subset.py
+
+install-webfont-subset: venv-webfont fonts/ttf/Monomakh-Regular.ttf scripts/build-webfont-subset.py
+	@test -n "$(RASKOVNIK_FRONTEND_DIR)" || (echo "Set RASKOVNIK_FRONTEND_DIR to the raskovnik-frontend checkout"; exit 1)
+	venv-webfont/bin/python scripts/build-webfont-subset.py --frontend-dir "$(RASKOVNIK_FRONTEND_DIR)"
+
 %.png: %.py build.stamp
 	. venv/bin/activate; python3 $< --output $@
 
 clean:
-	rm -rf venv
+	rm -rf venv venv-webfont
 	find . -name "*.pyc" -delete
 
 update-project-template:

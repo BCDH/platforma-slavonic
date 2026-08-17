@@ -1,6 +1,7 @@
 *~
 venv
 venv-test
+venv-webfont
 build.stamp
 proof
 # fonts

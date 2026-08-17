@@ -1,12 +1,25 @@
-# Monomakh Typeface
+# Platforma Slavonic
 
-Monomakh  is a Cyrillic font implemented in a mixed ustav/poluustav style and intended to cover needs of researches dealing with Slavic history and philology. It also provides Latin characters in a similar typeface, which is useful for working with multilingual academic editions.
+Platforma Slavonic is the webfont used by [Raskovnik](https://raskovnik.org/) for the specialized Cyrillic text found in digitized Serbian dictionaries. It is a single-weight, Cyrillic-focused subset of [Monomakh](https://fonts.google.com/specimen/Monomakh), a typeface in a mixed *ustav/poluustav* style designed for scholarship in Slavic history and philology.
 
-![Sample Image](documentation/image2.png)
+This repository retains the full Monomakh source and build system, then uses them to produce `fonts/webfonts/PlatformaSlavonic-Regular.woff2`. The derived webfont:
 
-## History
+* includes the Cyrillic repertoire, combining marks, digits, punctuation, spaces, and dotted circle available in Monomakh;
+* preserves Monomakh's OpenType layout features and legal metadata;
+* is renamed internally to `Platforma Slavonic`; and
+* omits Basic Latin letters so that Latin text can fall through to another font in a web font stack.
+
+Platforma Slavonic is therefore a web-optimized distribution of Monomakh, not a separate typeface design. The repository also contains builds of the complete Monomakh font.
+
+![Specimen of Monomakh Regular, the source typeface for Platforma Slavonic](documentation/image2.png)
+
+*Monomakh Regular, the source typeface from which Platforma Slavonic is built.*
+
+## Relationship to Monomakh
 
 Monomakh was originally designed as [Monomachus by Alexey Kryukov](https://github.com/akryukov/monomachus), which was licensed under the SIL Open Font License. Since Monomachus has not been updated for many years, it was forked as Monomakh, with the addition of new features and characters that had been encoded in Unicode 9 and Unicode 10 by Aleksandr Andreev and Nikita Simmons.
+
+The full Monomakh typeface includes matching Latin characters for multilingual academic editions. It is also available from [Google Fonts](https://fonts.google.com/specimen/Monomakh) and in Google Docs and other software that distributes Google Fonts.
 
 ## License
 
@@ -14,7 +27,7 @@ This Font Software is licensed under the SIL Open Font License,
 Version 1.1. This license is available with a FAQ at
 [https://openfontlicense.org/](https://openfontlicense.org/).
 
-## Building the Fonts
+## Building the Full Monomakh Fonts
 
 The font source is stored in a FontForge SFD file in the `sources/` directory. All modifications should be made in FontForge, resulting in an updated SFD file. This file is then converted to UFO format by running the convert script. From terminal:
 
@@ -47,9 +60,25 @@ The commands `make update` and `make update-project-template` update the reposit
 
 Google's master repository also had a GitHub workflow for building the fonts in the cloud on push, but this seems to always fail because of incorrect dependencies, so has been disabled. Instead, built binaries are stored on GitHub in the `fonts/` directory.
 
-This font has been added to [Google Fonts](https://fonts.google.com/specimen/Monomakh) and is available for use in Google Docs and other cloud-based software.
+## Building Platforma Slavonic
 
-## Features
+The Platforma Slavonic build reduces the Monomakh Regular TTF to the repertoire used by Raskovnik and writes it to `fonts/webfonts/PlatformaSlavonic-Regular.woff2`. It does not produce bold or italic styles.
+
+Build and validate the subset with:
+
+```
+make webfont-subset
+```
+
+To build it and install byte-identical copies in the two tracked font locations of a Raskovnik frontend checkout, run:
+
+```
+make install-webfont-subset RASKOVNIK_FRONTEND_DIR=/path/to/raskovnik-frontend
+```
+
+The build validates the generated WOFF2's character repertoire, internal names, weight, and required OpenType layout tables. When installing into Raskovnik, it also verifies that both installed copies are byte-identical to the generated file.
+
+## Inherited Monomakh Features
 
 * Stylistic Set 1 (ss01) is provided as a temporary workaround to [LibreOffice Bug 85731](https://bugs.documentfoundation.org/show_bug.cgi?id=85731), which does not allow specifying the hyphenation character in LibreOffice. When turned on, the feature replaces all instances of U+002D
 Hyphen-Minus and U+2010 Hyphen with U+005F Low Line (underscore)
